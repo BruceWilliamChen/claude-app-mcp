@@ -9,12 +9,13 @@
     "build": "npm run build:ui && npm run build:server",
     "dev:ui": "vite",
     "serve:http": "tsx server/main.ts",
-    "serve:stdio": "node dist/main.js --stdio"
+    "serve:stdio": "node dist/server/main.js --stdio"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "express": "^5.1.0",
     "cors": "^2.8.5",
+    "express": "^5.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zod": "^3.25.1"
