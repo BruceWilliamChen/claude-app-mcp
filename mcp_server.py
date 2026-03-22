@@ -21,7 +21,7 @@ from matlab_bridge import init_engine, check_status, execute_code, shutdown
 mcp = FastMCP("FilterDesign")
 
 FILTER_UI_URI = "ui://filter-design/app.html"
-FILTER_UI_PATH = Path(__file__).parent / "dist" / "ui" / "mcp-app.html"
+FILTER_UI_PATH = Path(__file__).parent / "dist" / "ui" / "index.html"
 
 
 def _load_ui_html() -> str:
