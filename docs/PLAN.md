@@ -494,18 +494,24 @@ python mcp_server.py --http
 # → http://localhost:8000/mcp
 ```
 
-### 4.3 Desktop Client Configuration
+### 4.3 Client Configuration
+
+Since the server is hosted remotely (via ngrok or any HTTPS endpoint), clients
+just connect to the URL — no local Python or MATLAB needed on the client side.
 
 ```json
 {
   "mcpServers": {
     "filter-design": {
-      "command": "python",
-      "args": ["D:/projects/matlab-mcp-app-smoothdata/mcp_server.py"]
+      "url": "https://your-domain.ngrok.dev/mcp"
     }
   }
 }
 ```
+
+> **Note**: The `"command"` + `"args"` pattern (stdio mode) is only for when
+> the client launches the server as a local subprocess. We don't need that —
+> our whole point is remote MATLAB.
 
 ### 4.4 Test Scenarios
 
