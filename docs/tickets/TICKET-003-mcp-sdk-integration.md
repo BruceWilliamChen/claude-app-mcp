@@ -25,7 +25,7 @@ Preview mode proves the UI works. But the real value is running inside a chat �
 4. `app.onhostcontextchanged` → handle inline ↔ fullscreen switching
 5. `app.requestDisplayMode()` → inline expand button
 
-**Reference:** See `docs/NOTES-mcp-server-patterns.md` for exact SDK hook patterns.
+**Reference:** See `docs/knowledge/mcp-server-patterns.md` for exact SDK hook patterns.
 
 ## Acceptance Criteria
 - [ ] `useMcpToolResult` hook created with ontoolresult + onhostcontextchanged

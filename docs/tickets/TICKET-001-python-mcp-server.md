@@ -21,7 +21,7 @@ The Node.js server can't easily connect to MATLAB. Python has `matlab.engine` wh
 - `scripts/start.sh` — Start server in HTTP mode
 - `scripts/start-ngrok.sh` — Start server + ngrok tunnel
 
-**Key patterns (see `docs/NOTES-mcp-server-patterns.md`):**
+**Key patterns (see `docs/knowledge/mcp-server-patterns.md`):**
 - FastMCP route fix: recreate `/mcp` route with explicit methods
 - CORS middleware for cross-origin access
 - Session manager lifespan

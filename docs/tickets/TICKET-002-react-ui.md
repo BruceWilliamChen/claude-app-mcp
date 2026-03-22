@@ -35,7 +35,7 @@ The current UI is just "Hello World". We need the full filter design experience 
 
 **Plotly decision:** Bundle `plotly.js-dist-min` via npm (not CDN) because MCP app iframes are sandboxed and may not have network access.
 
-**Reference:** See `docs/NOTES-filter-design-api.md` for exact Plotly definitions, conditional field logic, and CSS.
+**Reference:** See `docs/knowledge/filter-design-api.md` for exact Plotly definitions, conditional field logic, and CSS.
 
 ## Acceptance Criteria
 - [ ] `npm run dev` serves UI in browser (preview mode)
