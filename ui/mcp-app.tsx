@@ -80,6 +80,7 @@ function PreviewApp() {
       <div className="main-content">
         <ParamPanel
           config={fd.config}
+          result={fd.result?.data || null}
           showCutoffHigh={fd.showCutoffHigh}
           showRipple={fd.showRipple}
           showAtten={fd.showAtten}
@@ -98,7 +99,7 @@ function PreviewApp() {
               </div>
             </div>
           ) : (
-            <PlotArea data={fd.result?.data || null} display={fd.config.display} />
+            <PlotArea data={fd.result?.data || null} display={fd.config.display} onDisplayChange={fd.updateDisplay} />
           )}
 
           <CoeffDisplay
