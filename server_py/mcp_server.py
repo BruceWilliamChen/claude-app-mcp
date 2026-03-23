@@ -181,12 +181,59 @@ if __name__ == "__main__":
         print(f"Warning: MATLAB init failed: {e}. Will retry on first tool call.", flush=True)
 
     if "--http" in sys.argv:
-        # HTTP mode: use FastMCP's built-in streamable HTTP app directly
         import uvicorn
+        from starlette.applications import Starlette
+        from starlette.middleware import Middleware
+        from starlette.middleware.cors import CORSMiddleware
+        from starlette.requests import Request
+        from starlette.responses import JSONResponse
+        from starlette.routing import Route, Mount
 
-        app = mcp.streamable_http_app()
+        async def api_design(request: Request):
+            """REST fallback: direct filter design without MCP protocol."""
+            try:
+                params = await request.json()
+                design_code = build_design_code(params)
+                full_code = build_full_code(params)
+                result = execute_code(full_code)
+                if "error" in result:
+                    return JSONResponse({"error": result["error"], "matlab_code": design_code}, status_code=400)
+                return JSONResponse({"data": result["data"], "matlab_code": design_code, "elapsed": result["elapsed"]})
+            except Exception as e:
+                return JSONResponse({"error": str(e)}, status_code=500)
+
+        async def api_status(request: Request):
+            """REST fallback: MATLAB status check."""
+            return JSONResponse(check_status())
+
+        mcp_app = mcp.streamable_http_app()
+
+        # REST routes first, then MCP app mounted at /mcp only
+        # Extract the MCP route handler from the mcp_app
+        mcp_route_app = None
+        for route in mcp_app.routes:
+            if hasattr(route, 'path') and route.path == "/mcp":
+                mcp_route_app = route.app
+                break
+
+        routes = [
+            Route("/api/design", api_design, methods=["POST", "OPTIONS"]),
+            Route("/api/status", api_status, methods=["GET"]),
+        ]
+
+        if mcp_route_app:
+            routes.append(Route("/mcp", mcp_route_app, methods=["GET", "POST", "DELETE", "OPTIONS"]))
+
+        app = Starlette(
+            routes=routes,
+            middleware=[
+                Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
+            ],
+            lifespan=lambda app: mcp.session_manager.run(),
+        )
 
         print("Filter Design MCP server running at http://localhost:8000/mcp", flush=True)
+        print("REST fallback at http://localhost:8000/api/design", flush=True)
         uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
     else:
         # Stdio mode (for local testing / Claude Desktop)

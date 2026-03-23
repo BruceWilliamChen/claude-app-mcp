@@ -9,7 +9,7 @@ import { StatusBar } from "./components/StatusBar";
 import { InlineView } from "./components/InlineView";
 import { useFilterDesign } from "./hooks/useFilterDesign";
 import { useMcpToolResult } from "./hooks/useMcpToolResult";
-import { fetchDesign, fetchStatus } from "./hooks/useMockData";
+import { fetchDesign, fetchDesignFallback, fetchStatus } from "./hooks/useMockData";
 import type { FilterResult, FilterConfig } from "./types";
 
 // ── Shared FilterDesigner component ──
@@ -192,38 +192,55 @@ function ProductionApp() {
   }, [fd.config, fd.result, mcp.app, mcp.isConnected]);
 
   const runDesign = useCallback(async () => {
-    if (fd.isRunning || !mcp.app) return;
+    if (fd.isRunning) return;
     fd.setIsRunning(true);
     fd.setError(null);
 
+    // Try MCP callServerTool first, fall back to REST endpoint
     try {
-      const toolResult = await mcp.app.callServerTool("run-filter-design", {
-        filter_type: fd.config.filter_type,
-        response_type: fd.config.response_type,
-        order: fd.config.order,
-        cutoff_freq: fd.config.cutoff_freq,
-        sample_rate: fd.config.sample_rate,
-        cutoff_freq_high: fd.config.cutoff_freq_high || 0,
-        passband_ripple: fd.config.passband_ripple || 1,
-        stopband_atten: fd.config.stopband_atten || 40,
-        show_magnitude: fd.config.display.magnitude,
-        show_phase: fd.config.display.phase,
-        show_group_delay: fd.config.display.group_delay,
-        show_pole_zero: fd.config.display.pole_zero,
-      });
+      let result: FilterResult | null = null;
 
-      // Parse result from tool response
-      const text = (toolResult.content as any[])?.find((c: any) => c.type === "text")?.text;
-      if (text) {
-        const parsed = JSON.parse(text);
-        if (parsed.error) {
-          fd.setError(parsed.error);
-        } else {
-          fd.setResult(parsed as FilterResult);
+      // Attempt 1: MCP tool call
+      if (mcp.app) {
+        try {
+          const toolResult = await mcp.app.callServerTool("run_filter_design", {
+            filter_type: fd.config.filter_type,
+            response_type: fd.config.response_type,
+            order: fd.config.order,
+            cutoff_freq: fd.config.cutoff_freq,
+            sample_rate: fd.config.sample_rate,
+            cutoff_freq_high: fd.config.cutoff_freq_high || 0,
+            passband_ripple: fd.config.passband_ripple || 1,
+            stopband_atten: fd.config.stopband_atten || 40,
+            show_magnitude: fd.config.display.magnitude,
+            show_phase: fd.config.display.phase,
+            show_group_delay: fd.config.display.group_delay,
+            show_pole_zero: fd.config.display.pole_zero,
+          });
+
+          const text = (toolResult.content as any[])?.find((c: any) => c.type === "text")?.text;
+          if (text) {
+            const parsed = JSON.parse(text);
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+            result = parsed as FilterResult;
+          }
+        } catch (mcpErr) {
+          console.warn("MCP callServerTool failed, trying REST fallback:", mcpErr);
         }
       }
+
+      // Attempt 2: REST fallback (direct HTTP to server)
+      if (!result) {
+        result = await fetchDesignFallback(fd.config);
+      }
+
+      if (result) {
+        fd.setResult(result);
+      }
     } catch (err: any) {
-      fd.setError(err.message || "Tool call failed");
+      fd.setError(err.message || "Design failed");
     } finally {
       fd.setIsRunning(false);
     }
