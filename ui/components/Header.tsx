@@ -1,12 +1,14 @@
 interface HeaderProps {
   isRunning: boolean;
   autorun: boolean;
+  hasMatlabCode: boolean;
   onRun: () => void;
   onAutorunChange: (checked: boolean) => void;
+  onShowCode: () => void;
   onToggleView?: () => void;
 }
 
-export function Header({ isRunning, autorun, onRun, onAutorunChange, onToggleView }: HeaderProps) {
+export function Header({ isRunning, autorun, hasMatlabCode, onRun, onAutorunChange, onShowCode, onToggleView }: HeaderProps) {
   return (
     <header className="app-header">
       <div className="header-left">
@@ -31,6 +33,11 @@ export function Header({ isRunning, autorun, onRun, onAutorunChange, onToggleVie
         >
           <span className="run-icon">{isRunning ? "\u25F4" : "\u25B6"}</span> Run
         </button>
+        {hasMatlabCode && (
+          <button className="show-code-header-btn" onClick={onShowCode} title="Show generated MATLAB code">
+            &lt;/&gt;
+          </button>
+        )}
         {onToggleView && (
           <button className="view-toggle-btn" title="Toggle inline/fullscreen" onClick={onToggleView}>
             &#x26F6;

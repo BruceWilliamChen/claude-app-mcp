@@ -528,21 +528,19 @@ body {
   word-break: break-all;
 }
 
-/* ── Show Code Button ── */
-.show-code-btn {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  padding: 4px 12px;
-  font-size: 11px;
-  background: var(--panel-bg);
+/* ── Show Code Button (header) ── */
+.show-code-header-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: "Consolas", monospace;
+  background: none;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
   color: var(--text-muted);
 }
 
-.show-code-btn:hover {
+.show-code-header-btn:hover {
   background: var(--section-header-bg);
   color: var(--text);
 }

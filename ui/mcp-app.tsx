@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Header } from "./components/Header";
 import { ParamPanel } from "./components/ParamPanel";
 import { PlotArea } from "./components/PlotArea";
-import { ShowCodeButton } from "./components/CoeffDisplay";
+import { CodeDialog } from "./components/CoeffDisplay";
 import { StatusBar } from "./components/StatusBar";
 import { InlineView } from "./components/InlineView";
 import { useFilterDesign } from "./hooks/useFilterDesign";
@@ -18,6 +18,7 @@ function PreviewApp() {
   const [statusText, setStatusText] = useState("Checking connection...");
   const [connected, setConnected] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(true);
+  const [showCode, setShowCode] = useState(false);
 
   // Poll status
   useEffect(() => {
@@ -72,8 +73,10 @@ function PreviewApp() {
       <Header
         isRunning={fd.isRunning}
         autorun={fd.autorun}
+        hasMatlabCode={!!fd.result?.matlab_code}
         onRun={runDesign}
         onAutorunChange={fd.setAutorun}
+        onShowCode={() => setShowCode(true)}
         onToggleView={() => setIsFullscreen(false)}
       />
 
@@ -102,7 +105,9 @@ function PreviewApp() {
             <PlotArea data={fd.result?.data || null} display={fd.config.display} onDisplayChange={fd.updateDisplay} />
           )}
 
-          <ShowCodeButton matlabCode={fd.result?.matlab_code || null} />
+          {showCode && fd.result?.matlab_code && (
+            <CodeDialog matlabCode={fd.result.matlab_code} onClose={() => setShowCode(false)} />
+          )}
         </main>
       </div>
 
