@@ -22,32 +22,32 @@ User (chat) ←→ Host ←→ MCP Server (Python, HTTPS) ←→ MATLAB Engine
 ## Project Structure
 
 ```
-├── mcp_server.py              # Python FastMCP server (tools + resource + HTTPS)
-├── matlab_bridge.py           # MATLAB engine wrapper (init, execute, status)
-├── codegen.py                 # MATLAB code generation from filter params
-├── requirements.txt           # Python: mcp, uvicorn, matlabengine
-├── scripts/
-│   ├── start.sh               # Start server (HTTP mode)
-│   └── start-ngrok.sh         # Start server + ngrok HTTPS tunnel
-├── ui/
-│   ├── mcp-app.html           # Vite entry point
+├── server_py/                 # Python MCP server
+│   ├── mcp_server.py          # FastMCP server (tools + resource + HTTPS)
+│   ├── matlab_bridge.py       # MATLAB engine wrapper (init, execute, status)
+│   ├── codegen.py             # MATLAB code generation from filter params
+│   └── requirements.txt       # Python: mcp, uvicorn, matlabengine
+├── ui/                        # React frontend
+│   ├── index.html             # Vite entry point
 │   ├── mcp-app.tsx            # React root (preview/production mode)
 │   ├── types.ts               # FilterConfig, FilterResult types
 │   ├── global.css             # Styles
-│   ├── codegen-preview.ts     # Client-side MATLAB code preview
-│   ├── hooks/
+│   ├── hooks/                 # React hooks
 │   │   ├── useFilterDesign.ts # Param state + results
 │   │   ├── useMcpToolResult.ts# Production: MCP connection
 │   │   └── useMockData.ts     # Preview: standalone dev mode
-│   └── components/
-│       ├── Header.tsx         # Title, Run, Autorun
-│       ├── ParamPanel.tsx     # Filter params (left sidebar)
-│       ├── PlotArea.tsx       # Plotly charts
-│       ├── CoeffDisplay.tsx   # Coefficients + code
+│   └── components/            # React components
+│       ├── Header.tsx         # Title, Run, Autorun, Show Code
+│       ├── ParamPanel.tsx     # FILTERS / PARAMETERS / FILTER INFO
+│       ├── PlotArea.tsx       # Tabbed Plotly charts
+│       ├── CoeffDisplay.tsx   # Code dialog
 │       ├── StatusBar.tsx      # Connection status
 │       └── InlineView.tsx     # Compact view
+├── scripts/                   # Startup scripts
+│   ├── start.sh               # Start server (HTTP mode)
+│   └── start-ngrok.sh         # Start server + ngrok HTTPS tunnel
 ├── docs/                      # Project documentation (see below)
-├── CLAUDE.md                  # Project instructions for AI assistants
+├── CLAUDE.md                  # Project instructions
 ├── package.json               # UI dependencies
 ├── vite.config.ts             # Vite build config
 └── tsconfig.json              # TypeScript config (UI)
@@ -77,13 +77,13 @@ cd ui && npm install && npm run dev:preview
 
 ```bash
 # 1. Install Python deps
-pip install -r requirements.txt
+pip install -r server_py/requirements.txt
 
 # 2. Build UI
 cd ui && npm install && npm run build
 
 # 3. Start server
-python mcp_server.py --http
+python server_py/mcp_server.py --http
 # → http://localhost:8000/mcp
 
 # 4. (Optional) HTTPS via ngrok
