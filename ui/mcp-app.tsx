@@ -74,6 +74,7 @@ function FilterDesigner({ fd, connected, statusText, showCode, onRun, onShowCode
         statusText={statusText}
         elapsed={fd.result?.elapsed}
       />
+      <div className="bottom-spacer" />
     </div>
   );
 }
@@ -123,9 +124,10 @@ function PreviewApp() {
   if (!isFullscreen) {
     return (
       <InlineView
-        config={fd.config}
-        data={fd.result?.data || null}
-        onExpand={() => setIsFullscreen(true)}
+        onSelectFilter={(rt) => {
+          fd.setResponseType(rt);
+          setIsFullscreen(true);
+        }}
       />
     );
   }
@@ -200,36 +202,8 @@ function ProductionApp() {
     try {
       let result: FilterResult | null = null;
 
-      // Attempt 1: MCP tool call
-      if (mcp.app) {
-        try {
-          const toolResult = await mcp.app.callServerTool("run_filter_design", {
-            filter_type: fd.config.filter_type,
-            response_type: fd.config.response_type,
-            order: fd.config.order,
-            cutoff_freq: fd.config.cutoff_freq,
-            sample_rate: fd.config.sample_rate,
-            cutoff_freq_high: fd.config.cutoff_freq_high || 0,
-            passband_ripple: fd.config.passband_ripple || 1,
-            stopband_atten: fd.config.stopband_atten || 40,
-            show_magnitude: fd.config.display.magnitude,
-            show_phase: fd.config.display.phase,
-            show_group_delay: fd.config.display.group_delay,
-            show_pole_zero: fd.config.display.pole_zero,
-          });
-
-          const text = (toolResult.content as any[])?.find((c: any) => c.type === "text")?.text;
-          if (text) {
-            const parsed = JSON.parse(text);
-            if (parsed.error) {
-              throw new Error(parsed.error);
-            }
-            result = parsed as FilterResult;
-          }
-        } catch (mcpErr) {
-          console.warn("MCP callServerTool failed, trying REST fallback:", mcpErr);
-        }
-      }
+      // Skip MCP callServerTool — known to hang on web clients.
+      // Go straight to REST fallback.
 
       // Attempt 2: REST fallback (direct HTTP to server)
       if (!result) {
@@ -264,9 +238,10 @@ function ProductionApp() {
   if (mcp.displayMode === "inline") {
     return (
       <InlineView
-        config={fd.config}
-        data={fd.result?.data || null}
-        onExpand={() => mcp.app?.requestDisplayMode({ mode: "fullscreen" })}
+        onSelectFilter={(rt) => {
+          fd.setResponseType(rt);
+          mcp.app?.requestDisplayMode({ mode: "fullscreen" });
+        }}
       />
     );
   }

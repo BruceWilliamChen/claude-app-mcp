@@ -475,6 +475,12 @@ body {
   color: var(--text-muted);
 }
 
+/* ── Bottom spacer for chat overlay ── */
+.bottom-spacer {
+  height: 80px;
+  flex-shrink: 0;
+}
+
 /* ── Status Bar ── */
 .status-bar {
   display: flex;
@@ -499,10 +505,10 @@ body {
 
 /* ── Inline View ── */
 .inline-view {
-  max-width: 500px;
+  max-width: 400px;
   background: var(--panel-bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   font-size: 12px;
 }
@@ -511,21 +517,53 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 10px;
-  background: var(--section-header-bg);
-  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
 }
 
-.inline-title { font-weight: 600; font-size: 13px; }
-.inline-summary { padding: 6px 10px; font-size: 11px; color: var(--text-muted); }
-.inline-plot-area { padding: 0 8px 6px; }
+.inline-title { font-weight: 600; font-size: 14px; }
+.inline-subtitle { font-size: 11px; color: var(--text-muted); padding: 6px 12px 4px; }
 
-.inline-coefficients {
-  padding: 0 10px 10px;
-  font-family: "Consolas", monospace;
+.inline-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px 12px 12px;
+}
+
+.inline-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.inline-filter-btn:hover {
+  background: #e8f0fa;
+  border-color: var(--accent);
+}
+
+.inline-filter-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.inline-filter-label {
+  font-weight: 500;
+}
+
+.inline-filter-desc {
   font-size: 10px;
   color: var(--text-muted);
-  word-break: break-all;
 }
 
 /* ── Show Code Button (header) ── */
