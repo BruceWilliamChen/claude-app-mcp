@@ -423,7 +423,17 @@ body {
   flex: 1;
   background: var(--panel-bg);
   overflow: hidden;
-  min-height: 300px;
+  min-height: 0;
+}
+
+.plot-area > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.plot-area > div > div {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .plot-area.empty {

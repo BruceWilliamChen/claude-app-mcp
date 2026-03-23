@@ -47,7 +47,7 @@ function renderPlot(container: HTMLDivElement, type: PlotType, data: FilterResul
   container.innerHTML = "";
   const div = document.createElement("div");
   div.style.width = "100%";
-  div.style.height = "100%";
+  div.style.height = container.clientHeight + "px";
   container.appendChild(div);
 
   let traces: any[] = [];
@@ -112,7 +112,10 @@ export function PlotArea({ data, display, onDisplayChange }: PlotAreaProps) {
     const observer = new ResizeObserver(() => {
       if (containerRef.current && data && tabs.includes(activeTab)) {
         const plotDiv = containerRef.current.firstElementChild as HTMLElement;
-        if (plotDiv) Plotly.Plots.resize(plotDiv);
+        if (plotDiv) {
+          plotDiv.style.height = containerRef.current.clientHeight + "px";
+          Plotly.Plots.resize(plotDiv);
+        }
       }
     });
     observer.observe(containerRef.current);
