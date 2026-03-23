@@ -100,7 +100,76 @@ def configure_filter(
     return json.dumps(result)
 
 
-# ── Tool 2: run-filter-design (app only — hidden from model) ──
+# ── Tool 2: get-filter-settings ──
+
+@mcp.tool()
+def get_filter_settings() -> str:
+    """Get the current filter design settings and MATLAB connection status.
+
+    Returns the current filter configuration including type, response,
+    order, frequencies, and MATLAB connection info. Use this to understand
+    what the user has configured before making suggestions.
+    """
+    status = check_status()
+    return json.dumps({
+        "matlab_status": status,
+        "available_filter_types": ["butterworth", "chebyshev1", "chebyshev2", "elliptic", "fir"],
+        "available_response_types": ["lowpass", "highpass", "bandpass", "bandstop"],
+        "parameter_ranges": {
+            "order": {"min": 1, "max": 20},
+            "cutoff_freq": "Must be < sample_rate/2 (Nyquist)",
+            "passband_ripple": "dB, used by chebyshev1 and elliptic",
+            "stopband_atten": "dB, used by chebyshev2 and elliptic",
+        },
+        "note": "The UI pushes current settings via updateModelContext. Check the model context for the latest user configuration.",
+    })
+
+
+# ── Tool 3: set-filter-settings ──
+
+@mcp.tool()
+def set_filter_settings(
+    filter_type: str = "",
+    response_type: str = "",
+    order: int = 0,
+    cutoff_freq: float = 0,
+    sample_rate: float = 0,
+    cutoff_freq_high: float = 0,
+    passband_ripple: float = 0,
+    stopband_atten: float = 0,
+) -> str:
+    """Update filter design parameters. Only non-zero/non-empty values are applied.
+
+    Use this to change the filter configuration based on user requests like
+    "change to a Chebyshev filter" or "increase the order to 8".
+
+    Args:
+        filter_type: butterworth, chebyshev1, chebyshev2, elliptic, or fir
+        response_type: lowpass, highpass, bandpass, or bandstop
+        order: Filter order (1-20)
+        cutoff_freq: Cutoff frequency in Hz
+        sample_rate: Sample rate in Hz
+        cutoff_freq_high: Upper cutoff in Hz (bandpass/bandstop only)
+        passband_ripple: Passband ripple in dB (chebyshev1/elliptic)
+        stopband_atten: Stopband attenuation in dB (chebyshev2/elliptic)
+    """
+    updates = {}
+    if filter_type: updates["filter_type"] = filter_type
+    if response_type: updates["response_type"] = response_type
+    if order > 0: updates["order"] = order
+    if cutoff_freq > 0: updates["cutoff_freq"] = cutoff_freq
+    if sample_rate > 0: updates["sample_rate"] = sample_rate
+    if cutoff_freq_high > 0: updates["cutoff_freq_high"] = cutoff_freq_high
+    if passband_ripple > 0: updates["passband_ripple"] = passband_ripple
+    if stopband_atten > 0: updates["stopband_atten"] = stopband_atten
+
+    return json.dumps({
+        "updated_settings": updates,
+        "instruction": "Settings updated. The UI should reflect these changes. Call run_filter_design to execute with the new settings.",
+    })
+
+
+# ── Tool 4: run-filter-design (app only — hidden from model) ──
 
 @mcp.tool()
 def run_filter_design(
