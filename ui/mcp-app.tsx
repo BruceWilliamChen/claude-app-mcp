@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { Header } from "./components/Header";
 import { ParamPanel } from "./components/ParamPanel";
+import { MobileParamSheet } from "./components/MobileParamSheet";
 import { PlotArea } from "./components/PlotArea";
 import { CodeDialog } from "./components/CoeffDisplay";
 import { StatusBar } from "./components/StatusBar";
@@ -75,6 +76,20 @@ function FilterDesigner({ fd, connected, statusText, showCode, onRun, onShowCode
         elapsed={fd.result?.elapsed}
       />
       <div className="bottom-spacer" />
+
+      {/* Mobile: bottom sheet for parameters (hidden on desktop via CSS) */}
+      <MobileParamSheet
+        config={fd.config}
+        result={fd.result?.data || null}
+        showCutoffHigh={fd.showCutoffHigh}
+        showRipple={fd.showRipple}
+        showAtten={fd.showAtten}
+        showRippleSection={fd.showRippleSection}
+        onFilterTypeChange={fd.setFilterType}
+        onResponseTypeChange={fd.setResponseType}
+        onConfigChange={fd.updateConfig}
+        onDisplayChange={fd.updateDisplay}
+      />
     </div>
   );
 }
