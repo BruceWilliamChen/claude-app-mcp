@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Header } from "./components/Header";
 import { ParamPanel } from "./components/ParamPanel";
 import { PlotArea } from "./components/PlotArea";
-import { CoeffDisplay } from "./components/CoeffDisplay";
+import { ShowCodeButton } from "./components/CoeffDisplay";
 import { StatusBar } from "./components/StatusBar";
 import { InlineView } from "./components/InlineView";
 import { useFilterDesign } from "./hooks/useFilterDesign";
@@ -102,10 +102,7 @@ function PreviewApp() {
             <PlotArea data={fd.result?.data || null} display={fd.config.display} onDisplayChange={fd.updateDisplay} />
           )}
 
-          <CoeffDisplay
-            data={fd.result?.data || null}
-            matlabCode={fd.result?.matlab_code || null}
-          />
+          <ShowCodeButton matlabCode={fd.result?.matlab_code || null} />
         </main>
       </div>
 

@@ -314,6 +314,7 @@ body {
   overflow: hidden;
   background: var(--bg);
   padding: 0;
+  position: relative;
 }
 
 /* ── Plot Container ── */
@@ -525,6 +526,103 @@ body {
   font-size: 10px;
   color: var(--text-muted);
   word-break: break-all;
+}
+
+/* ── Show Code Button ── */
+.show-code-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.show-code-btn:hover {
+  background: var(--section-header-bg);
+  color: var(--text);
+}
+
+/* ── Dialog Overlay ── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  width: 520px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--section-header-bg);
+  border-radius: 6px 6px 0 0;
+}
+
+.dialog-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-copy-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.dialog-copy-btn:hover { background: var(--accent-hover); }
+
+.dialog-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.dialog-close:hover { color: var(--error); }
+
+.dialog-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+}
+
+.dialog-body .code-display {
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 /* ── Error ── */

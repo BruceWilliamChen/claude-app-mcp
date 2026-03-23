@@ -1,46 +1,54 @@
 import { useState } from "react";
-import type { FilterResultData } from "../types";
 
-function formatCoefficients(b: number[], a: number[]): string {
-  const fmt = (arr: number[]) =>
-    "[" + arr.map((v) => (typeof v === "number" ? v.toFixed(6) : v)).join(", ") + "]";
-  return `b = ${fmt(b)}\na = ${fmt(a)}`;
+interface CodeDialogProps {
+  matlabCode: string;
+  onClose: () => void;
 }
 
-interface CoeffDisplayProps {
-  data: FilterResultData | null;
+export function CodeDialog({ matlabCode, onClose }: CodeDialogProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(matlabCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="dialog-overlay" onClick={onClose}>
+      <div className="dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="dialog-header">
+          <span className="dialog-title">Generated MATLAB Code</span>
+          <div className="dialog-actions">
+            <button className="dialog-copy-btn" onClick={handleCopy}>
+              {copied ? "Copied!" : "Copy"}
+            </button>
+            <button className="dialog-close" onClick={onClose}>&times;</button>
+          </div>
+        </div>
+        <div className="dialog-body">
+          <pre className="code-display">{matlabCode}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ShowCodeButtonProps {
   matlabCode: string | null;
 }
 
-export function CoeffDisplay({ data, matlabCode }: CoeffDisplayProps) {
-  const [coeffOpen, setCoeffOpen] = useState(false);
-  const [codeOpen, setCodeOpen] = useState(false);
+export function ShowCodeButton({ matlabCode }: ShowCodeButtonProps) {
+  const [open, setOpen] = useState(false);
+
+  if (!matlabCode) return null;
 
   return (
     <>
-      {data?.b && data?.a && (
-        <div className="section" style={{ marginBottom: 8, border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--panel-bg)" }}>
-          <div className={`section-header ${coeffOpen ? "open" : ""}`} onClick={() => setCoeffOpen(!coeffOpen)} style={{ background: "var(--section-header)", borderRadius: "var(--radius) var(--radius) 0 0" }}>
-            Coefficients
-          </div>
-          {coeffOpen && (
-            <div className="section-body">
-              <pre className="coeff-display">{formatCoefficients(data.b, data.a)}</pre>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="section" style={{ marginBottom: 8, border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--panel-bg)" }}>
-        <div className={`section-header ${codeOpen ? "open" : ""}`} onClick={() => setCodeOpen(!codeOpen)} style={{ background: "var(--section-header)", borderRadius: "var(--radius) var(--radius) 0 0" }}>
-          Show Code
-        </div>
-        {codeOpen && (
-          <div className="section-body">
-            <pre className="code-display">{matlabCode || "% Configure parameters and click Run"}</pre>
-          </div>
-        )}
-      </div>
+      <button className="show-code-btn" onClick={() => setOpen(true)}>
+        Show Code
+      </button>
+      {open && <CodeDialog matlabCode={matlabCode} onClose={() => setOpen(false)} />}
     </>
   );
 }

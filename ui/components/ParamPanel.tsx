@@ -22,6 +22,11 @@ const FILTER_NAMES: Record<string, string> = {
   fir: "FIR",
 };
 
+function formatCoeffs(b: number[], a: number[]): string {
+  const fmt = (arr: number[]) => "[" + arr.map((v) => v.toFixed(6)).join(", ") + "]";
+  return `b = ${fmt(b)}\na = ${fmt(a)}`;
+}
+
 const LINE_COLORS: Record<string, string> = {
   butterworth: "#0072BD",
   chebyshev1: "#D95319",
@@ -276,6 +281,11 @@ export function ParamPanel({
             )}
           </tbody>
         </table>
+        {result?.b && result?.a && (
+          <SubSection title="Coefficients">
+            <pre className="coeff-display">{formatCoeffs(result.b, result.a)}</pre>
+          </SubSection>
+        )}
       </MajorSection>
     </aside>
   );
