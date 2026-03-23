@@ -181,46 +181,10 @@ if __name__ == "__main__":
         print(f"Warning: MATLAB init failed: {e}. Will retry on first tool call.", flush=True)
 
     if "--http" in sys.argv:
-        # HTTP mode: for web access, HTTPS via ngrok
-        from starlette.applications import Starlette
-        from starlette.middleware import Middleware
-        from starlette.middleware.cors import CORSMiddleware
-        from starlette.routing import Route
+        # HTTP mode: use FastMCP's built-in streamable HTTP app directly
         import uvicorn
 
-        original_app = mcp.streamable_http_app()
-
-        # Workaround: FastMCP creates routes with GET/HEAD only.
-        # MCP protocol needs POST/DELETE/OPTIONS too.
-        fixed_routes = []
-        for route in original_app.routes:
-            if isinstance(route, Route) and route.path == "/mcp":
-                fixed_routes.append(
-                    Route(
-                        route.path,
-                        endpoint=route.app,
-                        methods=["GET", "POST", "DELETE", "OPTIONS"],
-                        name=route.name,
-                    )
-                )
-            else:
-                fixed_routes.append(route)
-
-        cors_middleware = [
-            Middleware(
-                CORSMiddleware,
-                allow_origins=["*"],
-                allow_methods=["*"],
-                allow_headers=["*"],
-            )
-        ]
-
-        app = Starlette(
-            debug=original_app.debug,
-            routes=fixed_routes,
-            middleware=cors_middleware + list(original_app.user_middleware),
-            lifespan=lambda app: mcp.session_manager.run(),
-        )
+        app = mcp.streamable_http_app()
 
         print("Filter Design MCP server running at http://localhost:8000/mcp", flush=True)
         uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

@@ -20,9 +20,7 @@ echo ""
 echo "Press Ctrl+C to stop"
 echo ""
 
-# Replace with your ngrok domain if you have one:
-# ngrok http --domain=your-domain.ngrok.dev 8000 --host-header=localhost:8000
-ngrok http 8000
+ngrok http --url=matlab-mcp-app.ngrok.app 8000 --host-header=localhost:8000
 
 # Cleanup on exit
 kill $MCP_PID 2>/dev/null
