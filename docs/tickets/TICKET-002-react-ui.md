@@ -1,6 +1,6 @@
 # TICKET-002: Port Filter Design UI to React
 
-**Status:** Open
+**Status:** Done
 **Created:** 2026-03-22
 **Priority:** High
 **Assignee:** TBD

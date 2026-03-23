@@ -1,6 +1,6 @@
 # TICKET-004: End-to-End Test and Deploy
 
-**Status:** Open
+**Status:** Done
 **Created:** 2026-03-22
 **Priority:** Medium
 **Assignee:** TBD

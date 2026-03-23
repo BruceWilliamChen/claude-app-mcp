@@ -1,6 +1,6 @@
 # TICKET-003: Wire MCP App SDK Integration
 
-**Status:** Open
+**Status:** Done
 **Created:** 2026-03-22
 **Priority:** Medium
 **Assignee:** TBD
