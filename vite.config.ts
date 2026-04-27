@@ -10,7 +10,7 @@ export default defineConfig({
     outDir: "../dist/ui",
     emptyOutDir: true,
     rollupOptions: {
-      input: resolve(__dirname, "ui/mcp-app.html"),
+      input: resolve(__dirname, "ui/index.html"),
     },
   },
 });

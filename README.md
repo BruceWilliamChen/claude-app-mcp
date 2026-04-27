@@ -1,180 +1,178 @@
-# MATLAB Noise Filter Configurator — MCP App for Claude
+# Filter Design — MCP App
+
+Design digital filters (Butterworth, Chebyshev I/II, Elliptic, FIR) inside a chat interface.
+MATLAB runs remotely, computes filter data, and the UI renders interactive Plotly plots client-side.
+
+## How It Works
+
+```
+User (chat) ←→ Host (ChatGPT, Claude, etc.) ←→ MCP Server (Python, HTTPS) ←→ MATLAB Engine
+                                                        ↕
+                                                   UI (React iframe)
+                                                        ↕
+                                                   Plotly.js (interactive plots)
+```
+
+1. User: "Design a lowpass filter" → inline view shows filter type buttons
+2. User clicks Lowpass → fullscreen UI opens with MATLAB-style parameter panel
+3. User adjusts parameters (order, frequency, method) → UI updates live
+4. User clicks Run → MATLAB computes → Plotly renders interactive plots
+5. User: "Try a Chebyshev instead" → AI calls `set_filter_settings`, UI updates
+
+## MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `configure_filter` | Opens the filter design UI with pre-filled parameters |
+| `get_filter_settings` | Returns available filter types, parameter ranges, MATLAB status |
+| `set_filter_settings` | Updates specific parameters (e.g. "change order to 8") |
+| `run_filter_design` | Executes MATLAB filter design, returns numeric data for plots |
 
 ## Project Structure
 
 ```
-claude-app-mcp/
-├── server/
-│   ├── server.ts            # MCP server: tool + resource registration
-│   ├── main.ts              # Entry point: stdio + HTTP transports
-│   ├── matlab-bridge.ts     # node-matlab session wrapper
-│   ├── codegen.ts           # MATLAB code generation from filter params
-│   └── tsconfig.json        # Server TypeScript config
-├── ui/
-│   ├── mcp-app.html         # HTML entry point for Vite
-│   ├── mcp-app.tsx          # React root (useApp, state, wiring)
-│   ├── global.css           # Base styles
-│   ├── types.ts             # Shared types (FilterConfig, FilterResult)
-│   ├── codegen-preview.ts   # Client-side MATLAB code preview
-│   └── components/
-│       ├── FilterForm.tsx    # Config form (filter type, params, noise)
-│       ├── CodePreview.tsx   # MATLAB code preview block
-│       ├── ImageDisplay.tsx  # Before/after image viewer
-│       ├── MetricsPanel.tsx  # PSNR, SSIM, execution time
-│       └── ConsoleOutput.tsx # MATLAB console log
-├── dist/                     # Build output (gitignored)
-├── vite.config.ts
-├── tsconfig.json             # Client TypeScript config (noEmit, Vite handles)
-├── package.json
-├── PLAN.md
-└── README.md
+├── server_py/                 # Python MCP server
+│   ├── mcp_server.py          # FastMCP server (4 tools + resource + HTTPS)
+│   ├── matlab_bridge.py       # MATLAB engine wrapper (init, execute, status)
+│   ├── codegen.py             # MATLAB code generation from filter params
+│   └── requirements.txt       # Python: mcp, uvicorn, matlabengine
+├── ui/                        # React frontend
+│   ├── index.html             # Vite entry point
+│   ├── mcp-app.tsx            # React root (preview/production mode)
+│   ├── types.ts               # FilterConfig, FilterResult types
+│   ├── global.css             # Styles
+│   ├── hooks/                 # React hooks
+│   │   ├── useFilterDesign.ts # Param state + results
+│   │   ├── useMcpToolResult.ts# Production: MCP connection
+│   │   └── useMockData.ts     # Data fetching (preview + REST fallback)
+│   └── components/            # React components
+│       ├── Header.tsx         # Title, Run, Autorun, Show Code
+│       ├── ParamPanel.tsx     # FILTERS / PARAMETERS / FILTER INFO panels
+│       ├── PlotArea.tsx       # Tabbed Plotly charts (magnitude, phase, etc.)
+│       ├── CoeffDisplay.tsx   # Code dialog with Copy button
+│       ├── StatusBar.tsx      # Connection status + timing
+│       └── InlineView.tsx     # Filter type selector (inline mode)
+├── scripts/                   # Startup scripts
+│   ├── start.sh               # Start server (HTTP mode)
+│   └── start-ngrok.sh         # Start server + ngrok HTTPS tunnel
+├── docs/                      # Project documentation
+├── CLAUDE.md                  # Project instructions
+├── package.json               # UI dependencies
+├── vite.config.ts             # Vite build config
+└── tsconfig.json              # TypeScript config (UI)
 ```
 
 ## Tech Stack
 
-- **Server**: Node.js + TypeScript + `@modelcontextprotocol/sdk` + `@modelcontextprotocol/ext-apps`
-- **UI**: React 19 + TypeScript + `@modelcontextprotocol/ext-apps/react`
-- **Build**: Vite + `vite-plugin-singlefile` (bundles UI into single HTML file)
-- **MATLAB bridge**: `node-matlab` npm package (wraps `matlab -batch`)
-- **Transport**: stdio (Claude Desktop) or Streamable HTTP (web)
+| Layer | Technology |
+|-------|-----------|
+| Server | Python + FastMCP + Starlette + uvicorn |
+| MATLAB | `matlab.engine` for Python |
+| HTTPS | ngrok tunnel (`.ngrok.app` domain) |
+| UI | React 19 + TypeScript + Vite |
+| Plots | Plotly.js (client-side, interactive) |
+| Build | `vite-plugin-singlefile` (bundles UI into single HTML) |
 
-## How Claude Interacts
+## Quick Start
 
-1. User: "Remove noise from ~/photo.jpg" → Claude calls `configure-noise-filter` with pre-filled params
-2. UI renders with form pre-filled → user adjusts settings
-3. UI calls `updateModelContext()` on every change → Claude stays aware
-4. User: "What does kernel size do?" → Claude reads tool schema descriptions, explains
-5. User clicks "Run" → UI calls `run-noise-filter` directly → MATLAB executes → results display
-6. User: "SSIM is low, suggest better settings?" → Claude reads context, suggests changes
+### Development (UI only, preview mode)
 
----
-
-## Implementation Steps
-
-### Step 1: Scaffold project
-- [ ] Create directory structure
-- [ ] Create `package.json` with scripts and dependencies
-- [ ] Create root `tsconfig.json` (client — noEmit, Vite handles compilation)
-- [ ] Create `server/tsconfig.json` (server — compiles to dist/)
-- [ ] Create `vite.config.ts` (React + singlefile plugin)
-- [ ] Create `ui/mcp-app.html` (Vite entry point)
-- [ ] Run `npm install`
-
-**Key dependencies:**
-- Runtime: `@modelcontextprotocol/ext-apps`, `@modelcontextprotocol/sdk`, `node-matlab`, `express`, `cors`, `zod`, `react`, `react-dom`
-- Dev: `vite`, `@vitejs/plugin-react`, `vite-plugin-singlefile`, `tsx`, `typescript`, `concurrently`, `cross-env`, `@types/react`, `@types/react-dom`, `@types/express`, `@types/cors`
-
----
-
-### Step 2: Shared types (`ui/types.ts`)
-- [ ] `FilterType`: `"gaussian" | "median" | "wiener"`
-- [ ] `FilterConfig`: imagePath, filterType, per-filter params (sigma, kernelSize, noiseVariance), noise injection options (addNoise, noiseType, noiseDensity)
-- [ ] `FilterResult`: originalImage (base64), filteredImage (base64), noisyImage (base64), psnr, ssim, executionTimeMs, matlabCode, consoleOutput
-- [ ] `NoiseFilterToolOutput`: config + result + generatedCode + error
-
----
-
-### Step 3: MATLAB code generation (`server/codegen.ts` + `ui/codegen-preview.ts`)
-- [ ] Pure function: `generateMatlabCode(config: FilterConfig) -> string`
-- [ ] Generates self-contained MATLAB script that:
-  - Reads image with `imread()`
-  - Optionally adds noise with `imnoise()`
-  - Applies filter: `imgaussfilt()` / `medfilt2()` / `wiener2()`
-  - Computes PSNR/SSIM metrics
-  - Saves output images to temp dir via `imwrite()`
-  - Prints metrics as JSON with markers for parsing
-- [ ] Client-side duplicate (`ui/codegen-preview.ts`) for instant code preview (no server round-trip)
-
----
-
-### Step 4: MATLAB bridge (`server/matlab-bridge.ts`)
-- [ ] Use `node-matlab`'s `createSession()` for persistent MATLAB session (avoids 5-15s startup per call)
-- [ ] `executeFilter(matlabCode: string)` → runs code, reads output images as base64, parses metrics JSON from stdout
-- [ ] `checkMatlabAvailable()` → verifies MATLAB is installed and on PATH
-- [ ] Handle timeouts (60s default), session crashes, and restarts
-- [ ] Clean up temp files after reading
-
----
-
-### Step 5: MCP server (`server/server.ts`)
-- [ ] **Tool 1: `configure-noise-filter`** (visibility: model + app)
-  - Claude calls this to open the UI and optionally pre-fill settings from natural language
-  - Input schema describes all configurable params with descriptions (so Claude can explain them)
-  - Optional `execute: true` flag to also run the code
-  - Returns text summary (for Claude) + structuredContent (for UI)
-  - `_meta.ui.resourceUri: "ui://noise-filter/mcp-app.html"` links to the UI
-- [ ] **Tool 2: `run-noise-filter`** (visibility: app only — hidden from Claude)
-  - UI's "Run" button calls this directly via `app.callServerTool()`
-  - Always executes MATLAB, returns results
-  - Faster path — no LLM round-trip needed
-- [ ] **Resource**: `ui://noise-filter/mcp-app.html` serves the built single-file HTML
-- [ ] Use `registerAppTool()` and `registerAppResource()` from ext-apps SDK
-
----
-
-### Step 6: Server entry point (`server/main.ts`)
-- [ ] `--stdio` flag → `StdioServerTransport` (for Claude Desktop)
-- [ ] Default → Express + `StreamableHTTPServerTransport` on port 3001 (for web/testing)
-- [ ] Graceful shutdown handling
-
----
-
-### Step 7: React UI root (`ui/mcp-app.tsx`)
-- [ ] `useApp()` hook connects to Claude host
-- [ ] `app.ontoolresult` → receives config/results when Claude calls the tool
-- [ ] `app.ontoolinput` → receives tool arguments (for pre-filling form)
-- [ ] `app.updateModelContext()` → called on every form change so Claude stays aware of current settings
-- [ ] `app.callServerTool("run-noise-filter", {...})` → called when user clicks "Run"
-- [ ] Compose all child components
-
----
-
-### Step 8: UI components (`ui/components/`)
-- [ ] **FilterForm.tsx**: Image path input, filter type dropdown, dynamic params (sigma slider for gaussian, kernel size for all, noise variance for wiener), noise injection toggle with type/density
-- [ ] **CodePreview.tsx**: Monospace `<pre>` block with basic MATLAB syntax highlighting, auto-updates as form changes
-- [ ] **ImageDisplay.tsx**: Side-by-side original / noisy / filtered images from base64
-- [ ] **MetricsPanel.tsx**: PSNR (dB), SSIM (0-1), execution time cards with color coding
-- [ ] **ConsoleOutput.tsx**: Scrollable terminal-style MATLAB stdout display
-
----
-
-### Step 9: Styling (`ui/global.css`)
-- [ ] Light/dark theme support via CSS variables + `prefers-color-scheme`
-- [ ] System font stack
-- [ ] MATLAB livescript aesthetic: section borders, monospace code blocks
-- [ ] MATLAB-blue accent color (`#0076A8`)
-- [ ] Responsive grid for image display
-
----
-
-### Step 10: Build and test
-- [ ] `npm run build` succeeds without errors
-- [ ] Start server with `npm run serve:http`, verify `/mcp` endpoint responds
-- [ ] Test MATLAB bridge independently: `node -e "import('node-matlab').then(m => m.Matlab.run('disp(1+1)'))"`
-- [ ] Open UI in ext-apps test host, verify form renders and code preview updates
-- [ ] Click "Run" with a test image, verify MATLAB executes and results display
-- [ ] Configure in Claude Desktop, test natural language → UI pre-fill flow
-
-**Claude Desktop config (`claude_desktop_config.json`):**
-```json
-{
-  "mcpServers": {
-    "claude-app-mcp": {
-      "command": "node",
-      "args": ["/Users/bchen/Documents/Projects/claude-app-mcp/dist/main.js", "--stdio"]
-    }
-  }
-}
+```bash
+cd ui && npm install && npm run dev
+# → http://localhost:5174?preview=true
+# Needs Flask server on :3000 for MATLAB data (see matlab-mcp-app)
 ```
 
----
+### Full stack (with MATLAB)
 
-## Verification Checklist
+```bash
+# 1. Install Python deps
+pip install -r server_py/requirements.txt
 
-- [ ] `npm run build` succeeds without errors
-- [ ] HTTP server starts and `/mcp` endpoint responds
-- [ ] MATLAB bridge can execute simple commands
-- [ ] UI renders in ext-apps test host
-- [ ] Form changes update code preview in real-time
-- [ ] "Run" button executes MATLAB and displays results
-- [ ] Claude Desktop integration works end-to-end
+# 2. Build UI
+cd ui && npm install && npm run build
+
+# 3. Start server
+python server_py/mcp_server.py --http
+# → MCP at http://localhost:8000/mcp
+# → REST at http://localhost:8000/api/design
+
+# 4. HTTPS via ngrok
+ngrok http --url=matlab-mcp-app.ngrok.app 8000 --host-header=localhost:8000
+# → https://matlab-mcp-app.ngrok.app/mcp
+```
+
+### Client Configuration
+
+Add as a custom MCP connector:
+
+```
+https://matlab-mcp-app.ngrok.app/mcp
+```
+
+Works with ChatGPT, Claude (intermittent due to web client bugs), and any MCP-compatible host.
+
+## UI Views
+
+### Inline View
+Shows 4 filter type buttons (Lowpass, Highpass, Bandpass, Bandstop).
+Clicking a button expands to fullscreen with that filter selected.
+
+### Fullscreen View
+MATLAB Filter Designer-style interface:
+- **Left panel**: FILTERS table, PARAMETERS (expandable sub-sections), FILTER INFORMATION
+- **Right panel**: Tabbed Plotly plots (add/remove tabs, one plot at a time)
+- **Header**: Run button, Autorun toggle, Show Code (`</>`) dialog
+- **Status bar**: MATLAB connection status + execution timing
+
+## Filter Types
+
+| Type | MATLAB Function | Extra Params |
+|------|----------------|-------------|
+| Butterworth | `butter()` | — |
+| Chebyshev I | `cheby1()` | Passband ripple (dB) |
+| Chebyshev II | `cheby2()` | Stopband attenuation (dB) |
+| Elliptic | `ellip()` | Ripple + attenuation |
+| FIR (Window) | `fir1()` | — |
+
+**Response types:** Lowpass, Highpass, Bandpass, Bandstop
+
+**Plots:** Magnitude response, Phase response, Group delay, Pole-zero
+
+## REST Fallback
+
+The server exposes REST endpoints alongside MCP for when `callServerTool` fails
+(known web client session bugs):
+
+- `POST /api/design` — filter design (same as `run_filter_design` tool)
+- `GET /api/status` — MATLAB connection status
+
+The UI automatically falls back to REST when MCP tool calls fail.
+
+## Known Issues
+
+- **Claude web client** has intermittent session bugs (Issues #99, #83, #102) causing
+  connection failures. The app renders when it connects but sessions are unstable.
+  See `docs/notes/web-client-bugs-2026-03.md`.
+- **ChatGPT** works more reliably for MCP connections.
+- **`callServerTool`** hangs on some web clients — the UI skips it and uses REST fallback.
+
+## Documentation
+
+All project docs in `docs/`. See `docs/README.md` for the full index.
+
+| Folder | Purpose |
+|--------|---------|
+| `docs/plan/` | Implementation plans with phased steps and checklists |
+| `docs/knowledge/` | Reference patterns, API contracts, architecture |
+| `docs/notes/` | Investigation findings, gotchas, decisions |
+| `docs/tickets/` | Task tracking — what/why/how with acceptance criteria |
+
+## Status
+
+All 4 implementation tickets complete. App is functional end-to-end.
+
+- TICKET-001: Python MCP server with HTTPS — Done
+- TICKET-002: Port filter design UI to React — Done
+- TICKET-003: MCP SDK integration — Done
+- TICKET-004: End-to-end test and deploy — Done (tested on ChatGPT + Claude)
