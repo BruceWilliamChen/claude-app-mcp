@@ -20,7 +20,7 @@ echo ""
 echo "Press Ctrl+C to stop"
 echo ""
 
-ngrok http --url=matlab-mcp-app.ngrok.app 8000 --host-header=localhost:8000
+ngrok http --url=matlab-mcp-app.ngrok.app 8000 --request-header-add "Host: localhost:8000"
 
 # Cleanup on exit
 kill $MCP_PID 2>/dev/null

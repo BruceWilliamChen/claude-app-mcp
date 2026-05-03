@@ -4,8 +4,6 @@ import io
 import json
 import time
 
-import matlab.engine
-
 # Global engine state
 eng = None
 engine_info = {}
@@ -14,6 +12,16 @@ engine_info = {}
 def init_engine():
     """Start or connect to a MATLAB engine session."""
     global eng, engine_info
+
+    try:
+        import matlab.engine
+    except ImportError:
+        print(
+            "matlab.engine not installed — Run button will return error. "
+            "Install matlabengine and a licensed MATLAB to enable filter execution.",
+            flush=True,
+        )
+        return
 
     sessions = matlab.engine.find_matlab()
     if sessions:
@@ -74,6 +82,8 @@ def execute_code(code: str) -> dict:
     """
     if eng is None:
         return {"error": "MATLAB engine not initialized"}
+
+    import matlab.engine  # safe: eng is not None means init_engine() succeeded
 
     t_start = time.time()
     stdout = io.StringIO()
